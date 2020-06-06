@@ -2,7 +2,7 @@ const keys = require('../keys');
 
 module.exports = function (email) {
     return {
-        to: to,
+        to: email,
         from: keys.EMAIL_FROM,
         subject: 'Аккаунт создан',
         html: `
