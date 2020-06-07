@@ -4,15 +4,28 @@ const auth = require('../middleware/auth');
 const router = Router();
 
 router.get('/', async (req, res) => {
-  const courses = await Course.find()
-    .populate('userId', 'email name')
-    .select('price title img');
+  try {
+    /*
+      В userId лежит id создателя курса(user)
+      .populate() дает возможность иметь доступ
+      к другим параметрам user'а.
+      .populate('userId', 'email name') - 
+      доступ к параметрам email и name для user'а c userId
+    */
+    const courses = await Course.find() 
+      .populate('userId', 'email name') 
+      .select('price title img');
 
-  res.render('courses', {
-    title: 'Курсы',
-    isCourses: true,
-    courses
-  })
+    console.log(courses);  
+    res.render('courses', {
+      title: 'Курсы',
+      isCourses: true,
+      userId: req.user ? req.user._id.toString() : null,
+      courses
+    })
+  } catch (e) {
+    console.log(e)
+  }
 })
 
 router.get('/:id/edit', auth, async (req, res) => {

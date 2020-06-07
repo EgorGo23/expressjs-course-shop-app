@@ -17,7 +17,7 @@ router.post('/', auth, async (req, res) => {
     img: req.body.img,
     userId: req.user
   });
-
+  
   try {
     await course.save();
     res.redirect('/courses');

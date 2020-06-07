@@ -20,7 +20,8 @@ const keys = require('./keys');
 const app = express();
 const hbs = exphbs.create({
   defaultLayout: 'main',
-  extname: 'hbs'
+  extname: 'hbs',
+  helpers: require('./utils/hbs-helpers')
 });
 
 const store = new MongoStore({
@@ -40,7 +41,7 @@ app.use(session({
   saveUninitialized: false,
   store,
 }));
-app.use(csrf());
+app.use(csrf()); // проверяет наличие данного csrf токена
 app.use(flash());
 app.use(varMiddleware);
 app.use(userMiddleware);
