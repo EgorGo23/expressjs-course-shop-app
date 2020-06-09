@@ -8,7 +8,7 @@ const User = require('../models/user');
 const keys = require('../keys');
 const regEmail = require('../emails/registration');
 const resetEmail = require('../emails/reset');
-const {registerValidators} = require('../utils/validators');
+const {registerValidators, loginValidators} = require('../utils/validators');
 const router = Router();
 
 const transporter = nodemailer.createTransport(sendgrid({
@@ -31,31 +31,26 @@ router.get('/logout', async (req, res) => {
 })
 
 
-router.post('/login', async (req, res) => {
+router.post('/login', loginValidators, async (req, res) => {
     try {
         const {email, password} = req.body;
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            req.flash('loginError', errors.array()[0].msg);
+            return res.status(422).redirect('/auth/login#login');
+        }
+
         const candidate = await User.findOne({ email });
 
-        if (candidate) {
-            const areSame = await bcrypt.compare(password, candidate.password);
-
-            if (areSame) {
-                req.session.user = candidate;
-                req.session.isAuthenticated = true;
-                req.session.save(err => {
-                    if (err) {
-                        throw err;
-                    }
-                    res.redirect('/');
-                });
-            } else {
-                req.flash('loginError', 'Неверный пароль');
-                res.redirect('/auth/login#login');
+        req.session.user = candidate;
+        req.session.isAuthenticated = true;
+        req.session.save(err => {
+            if (err) {
+                throw err;
             }
-        } else {
-            req.flash('loginError', 'Такого пользователя не существует');
-            res.redirect('/auth/login#login');
-        }
+            res.redirect('/');
+        });
     } catch (e) {
         console.log(e);
     }
@@ -64,7 +59,7 @@ router.post('/login', async (req, res) => {
 router.post('/register', registerValidators, async (req, res) => {
     try {
         const {email, password, name} = req.body;
-
+        
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             req.flash('registerError', errors.array()[0].msg);
@@ -76,7 +71,7 @@ router.post('/register', registerValidators, async (req, res) => {
             email, name, password: hashPassword, cart: {items: []}
         })
         await user.save();
-        await transporter.sendMail(regEmail(email));
+        //await transporter.sendMail(regEmail(email));
         res.redirect('/auth/login#login');
     } catch(e) {
         console.log(e);
